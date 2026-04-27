@@ -54,44 +54,6 @@ window.onload = async () => {
     }
 };
 
-// ====== منطق تثبيت التطبيق (PWA) للإدارة ======
-window.showInstallPrompt = function() {
-    const isDismissed = localStorage.getItem('pwa_prompt_dismissed_admin'); 
-    if (isDismissed === 'true') return;
-    if (document.getElementById('installPwaModal')) return;
-
-    const installModal = document.createElement('div');
-    installModal.id = 'installPwaModal';
-    installModal.innerHTML = `
-        <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s;">
-            <div class="3d-card" style="background: white; width: 90%; max-width: 350px; border-radius: 20px; padding: 30px 20px; text-align: center;">
-                <div style="font-size: 50px; margin-bottom: 15px;">📱</div>
-                <h3 style="font-size: 22px; color: #1e3c72; margin-bottom: 10px; font-weight: 900;">لوحة الإدارة كـ تطبيق</h3>
-                <p style="color: #7f8c8d; font-size: 15px; margin-bottom: 25px;">حمل التطبيق الآن لتتمكن من إدارة المنصة بسرعة وسهولة.</p>
-                <button id="btnPwaInstall" style="width: 100%; padding: 14px; background: #6a11cb; color: white; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 10px;">تحميل التطبيق</button>
-                <button id="btnPwaClose" style="width: 100%; padding: 12px; background: transparent; color: #7f8c8d; border: none; font-weight: 700; cursor: pointer;">تخطي الآن</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(installModal);
-    
-    document.getElementById('btnPwaInstall').onclick = async () => {
-        if (window.deferredPrompt) {
-            window.deferredPrompt.prompt();
-            const { outcome } = await window.deferredPrompt.userChoice;
-            if (outcome === 'accepted') window.deferredPrompt = null;
-        }
-        document.body.removeChild(installModal);
-    };
-    
-    document.getElementById('btnPwaClose').onclick = () => {
-        document.body.removeChild(installModal);
-        localStorage.setItem('pwa_prompt_dismissed_admin', 'true');
-    };
-}
-if (window.deferredPrompt) window.showInstallPrompt();
-// ===========================================
-
 const adminLoginForm = document.getElementById('adminLoginForm');
 if (adminLoginForm) {
     adminLoginForm.addEventListener('submit', function(e) {
@@ -191,7 +153,7 @@ document.getElementById('addAdForm').addEventListener('submit', function(e) {
     this.reset(); renderAds();
 });
 
-function renderStudents() {
+window.renderStudents = function() {
     const list = document.getElementById('studentsList');
     const searchInput = document.getElementById('searchStudentInput');
     const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
@@ -221,7 +183,7 @@ function renderStudents() {
     });
 }
 
-function populateSectionSelects() {
+window.populateSectionSelects = function() {
     const selectAdd = document.getElementById('lessonSection');
     const selectEdit = document.getElementById('editLessonSection');
     const options = '<option value="" disabled selected>اختر القسم...</option>' + 
@@ -230,7 +192,7 @@ function populateSectionSelects() {
     if(selectEdit) selectEdit.innerHTML = options;
 }
 
-function renderSections() {
+window.renderSections = function() {
     const list = document.getElementById('sectionsList');
     list.innerHTML = sections.length ? '' : '<p style="text-align:center; color:#7f8c8d; font-weight:700;">لا يوجد أقسام.</p>';
     sections.forEach((s, index) => {
@@ -244,7 +206,7 @@ function renderSections() {
     });
 }
 
-function renderLessons() {
+window.renderLessons = function() {
     const list = document.getElementById('lessonsList');
     list.innerHTML = lessons.length ? '' : '<p style="text-align:center; color:#7f8c8d; font-weight:700;">لا يوجد دروس.</p>';
     lessons.forEach((l, index) => {
@@ -260,7 +222,7 @@ function renderLessons() {
     });
 }
 
-function renderAds() {
+window.renderAds = function() {
     const list = document.getElementById('adsList');
     list.innerHTML = ads.length ? '' : '<p style="text-align:center; color:#7f8c8d; font-weight:700;">لا توجد إعلانات.</p>';
     ads.forEach((a, index) => {
