@@ -29,10 +29,7 @@ const DB_SECTIONS = 'edu_platform_sections_v3';
 const DB_LESSONS = 'edu_platform_lessons_v3';
 const DB_ADS = 'edu_platform_ads_v3';
 
-let students = [];
-let sections = [];
-let lessons = [];
-let ads = [];
+let students = []; let sections = []; let lessons = []; let ads = [];
 
 window.onload = async () => {
     try {
@@ -51,7 +48,6 @@ window.onload = async () => {
         _originalSetItem(DB_ADS, JSON.stringify(ads));
     } catch(e) { console.error(e); }
 
-    // ملاحظة: تم إزالة setTimeout القديم هنا ليعمل PWA بشكل سليم
     const isAdminLogged = sessionStorage.getItem('adminLogged_v3');
     if (isAdminLogged === 'true') {
         showAdminApp();
@@ -59,37 +55,31 @@ window.onload = async () => {
 };
 
 // ====== منطق تثبيت التطبيق (PWA) للإدارة ======
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    if (!localStorage.getItem('pwa_prompt_dismissed_admin')) {
-        showInstallPrompt();
-    }
-});
-
 window.showInstallPrompt = function() {
+    const isDismissed = localStorage.getItem('pwa_prompt_dismissed_admin'); 
+    if (isDismissed === 'true') return;
     if (document.getElementById('installPwaModal')) return;
+
     const installModal = document.createElement('div');
     installModal.id = 'installPwaModal';
     installModal.innerHTML = `
-        <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+        <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s;">
             <div class="3d-card" style="background: white; width: 90%; max-width: 350px; border-radius: 20px; padding: 30px 20px; text-align: center;">
                 <div style="font-size: 50px; margin-bottom: 15px;">📱</div>
                 <h3 style="font-size: 22px; color: #1e3c72; margin-bottom: 10px; font-weight: 900;">لوحة الإدارة كـ تطبيق</h3>
                 <p style="color: #7f8c8d; font-size: 15px; margin-bottom: 25px;">حمل التطبيق الآن لتتمكن من إدارة المنصة بسرعة وسهولة.</p>
                 <button id="btnPwaInstall" style="width: 100%; padding: 14px; background: #6a11cb; color: white; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 10px;">تحميل التطبيق</button>
-                <button id="btnPwaClose" style="width: 100%; padding: 12px; background: transparent; color: #7f8c8d; border: none; cursor: pointer;">تخطي الآن</button>
+                <button id="btnPwaClose" style="width: 100%; padding: 12px; background: transparent; color: #7f8c8d; border: none; font-weight: 700; cursor: pointer;">تخطي الآن</button>
             </div>
         </div>
     `;
     document.body.appendChild(installModal);
     
     document.getElementById('btnPwaInstall').onclick = async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') deferredPrompt = null;
+        if (window.deferredPrompt) {
+            window.deferredPrompt.prompt();
+            const { outcome } = await window.deferredPrompt.userChoice;
+            if (outcome === 'accepted') window.deferredPrompt = null;
         }
         document.body.removeChild(installModal);
     };
@@ -99,9 +89,9 @@ window.showInstallPrompt = function() {
         localStorage.setItem('pwa_prompt_dismissed_admin', 'true');
     };
 }
+if (window.deferredPrompt) window.showInstallPrompt();
 // ===========================================
 
-// باقي دوال الإدارة الأصلية (تسجيل الدخول، الطلاب، الدروس...)
 const adminLoginForm = document.getElementById('adminLoginForm');
 if (adminLoginForm) {
     adminLoginForm.addEventListener('submit', function(e) {
@@ -121,11 +111,7 @@ if (adminLoginForm) {
 function showAdminApp() {
     document.getElementById('loginScreen').classList.remove('active');
     document.getElementById('appScreen').classList.add('active');
-    populateSectionSelects();
-    renderStudents();
-    renderSections();
-    renderLessons();
-    renderAds();
+    populateSectionSelects(); renderStudents(); renderSections(); renderLessons(); renderAds();
 }
 
 window.switchTab = function(tabId) {
@@ -141,9 +127,7 @@ window.showPopup = function(title, message) {
     document.getElementById('popupMessage').innerText = message;
     document.getElementById('customPopup').classList.add('active');
 }
-window.closePopup = function() {
-    document.getElementById('customPopup').classList.remove('active');
-}
+window.closePopup = function() { document.getElementById('customPopup').classList.remove('active'); }
 
 function getEmbedUrl(url) {
     let videoId = "";
@@ -172,8 +156,7 @@ document.getElementById('addStudentForm').addEventListener('submit', function(e)
         showPopup('نجاح الإضافة', 'تمت إضافة الطالب وتفعيل اشتراكه بنجاح! 🎉');
     }
     localStorage.setItem(DB_STUDENTS, JSON.stringify(students));
-    this.reset();
-    renderStudents();
+    this.reset(); renderStudents();
 });
 
 document.getElementById('addSectionForm').addEventListener('submit', function(e) {
@@ -182,9 +165,7 @@ document.getElementById('addSectionForm').addEventListener('submit', function(e)
     sections.push({ id: Date.now(), name: sectionName });
     localStorage.setItem(DB_SECTIONS, JSON.stringify(sections));
     showPopup('نجاح الإضافة', 'تمت إضافة القسم بنجاح! 🗂️');
-    this.reset();
-    renderSections();
-    populateSectionSelects();
+    this.reset(); renderSections(); populateSectionSelects();
 });
 
 document.getElementById('addLessonForm').addEventListener('submit', function(e) {
@@ -196,8 +177,7 @@ document.getElementById('addLessonForm').addEventListener('submit', function(e) 
     lessons.push({ id: Date.now(), sectionId: sectionId, title, videoUrl: getEmbedUrl(url) });
     localStorage.setItem(DB_LESSONS, JSON.stringify(lessons));
     showPopup('نجاح النشر', 'تم نشر الدرس بنجاح! 📚');
-    this.reset();
-    renderLessons();
+    this.reset(); renderLessons();
 });
 
 document.getElementById('addAdForm').addEventListener('submit', function(e) {
@@ -208,8 +188,7 @@ document.getElementById('addAdForm').addEventListener('submit', function(e) {
     ads.unshift({ id: Date.now(), title, text: content, date });
     localStorage.setItem(DB_ADS, JSON.stringify(ads));
     showPopup('نجاح النشر', 'تم نشر الإعلان للطلاب! 📢');
-    this.reset();
-    renderAds();
+    this.reset(); renderAds();
 });
 
 function renderStudents() {
