@@ -1,4 +1,4 @@
-const CACHE_NAME = 'edu-admin-v4';
+const CACHE_NAME = 'edu-admin-v5';
 const urlsToCache = [
     './',
     './index.html',
