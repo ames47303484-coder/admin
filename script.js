@@ -51,14 +51,57 @@ window.onload = async () => {
         _originalSetItem(DB_ADS, JSON.stringify(ads));
     } catch(e) { console.error(e); }
 
-    setTimeout(() => showInstallPrompt(), 2000);
-
+    // ملاحظة: تم إزالة setTimeout القديم هنا ليعمل PWA بشكل سليم
     const isAdminLogged = sessionStorage.getItem('adminLogged_v3');
     if (isAdminLogged === 'true') {
         showAdminApp();
     }
 };
 
+// ====== منطق تثبيت التطبيق (PWA) للإدارة ======
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (!localStorage.getItem('pwa_prompt_dismissed_admin')) {
+        showInstallPrompt();
+    }
+});
+
+window.showInstallPrompt = function() {
+    if (document.getElementById('installPwaModal')) return;
+    const installModal = document.createElement('div');
+    installModal.id = 'installPwaModal';
+    installModal.innerHTML = `
+        <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+            <div class="3d-card" style="background: white; width: 90%; max-width: 350px; border-radius: 20px; padding: 30px 20px; text-align: center;">
+                <div style="font-size: 50px; margin-bottom: 15px;">📱</div>
+                <h3 style="font-size: 22px; color: #1e3c72; margin-bottom: 10px; font-weight: 900;">لوحة الإدارة كـ تطبيق</h3>
+                <p style="color: #7f8c8d; font-size: 15px; margin-bottom: 25px;">حمل التطبيق الآن لتتمكن من إدارة المنصة بسرعة وسهولة.</p>
+                <button id="btnPwaInstall" style="width: 100%; padding: 14px; background: #6a11cb; color: white; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 10px;">تحميل التطبيق</button>
+                <button id="btnPwaClose" style="width: 100%; padding: 12px; background: transparent; color: #7f8c8d; border: none; cursor: pointer;">تخطي الآن</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(installModal);
+    
+    document.getElementById('btnPwaInstall').onclick = async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') deferredPrompt = null;
+        }
+        document.body.removeChild(installModal);
+    };
+    
+    document.getElementById('btnPwaClose').onclick = () => {
+        document.body.removeChild(installModal);
+        localStorage.setItem('pwa_prompt_dismissed_admin', 'true');
+    };
+}
+// ===========================================
+
+// باقي دوال الإدارة الأصلية (تسجيل الدخول، الطلاب، الدروس...)
 const adminLoginForm = document.getElementById('adminLoginForm');
 if (adminLoginForm) {
     adminLoginForm.addEventListener('submit', function(e) {
@@ -93,7 +136,6 @@ window.switchTab = function(tabId) {
     if(navItem) navItem.classList.add('active');
 }
 
-// Custom 3D Popup logic
 window.showPopup = function(title, message) {
     document.getElementById('popupTitle').innerText = title;
     document.getElementById('popupMessage').innerText = message;
@@ -102,52 +144,6 @@ window.showPopup = function(title, message) {
 window.closePopup = function() {
     document.getElementById('customPopup').classList.remove('active');
 }
-
-// Global PWA prompt logic
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-});
-
-window.showInstallPrompt = function() {
-    if (!localStorage.getItem('pwa_prompt_shown_v1')) {
-        const installModal = document.createElement('div');
-        installModal.id = 'installPwaModal';
-        installModal.innerHTML = `
-            <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.5s;">
-                <div class="3d-card" style="background: white; width: 90%; max-width: 350px; border-radius: 20px; padding: 30px 20px; text-align: center; position: relative;">
-                    <div style="font-size: 50px; margin-bottom: 15px; animation: popBounce 0.5s;">📱</div>
-                    <h3 style="font-size: 22px; color: #1e3c72; margin-bottom: 10px; font-weight: 900;">حمل التطبيق الآن!</h3>
-                    <p style="color: #7f8c8d; font-size: 15px; font-weight: 600; margin-bottom: 25px;">حمل التطبيق ليكون الاستخدام سلس ومباشر وأسهل عليك في المرات القادمة.</p>
-                    <button id="btnPwaInstall" style="width: 100%; padding: 14px; background: #6a11cb; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 5px 15px rgba(106, 17, 203, 0.4); margin-bottom: 10px;">تحميل التطبيق</button>
-                    <button id="btnPwaClose" style="width: 100%; padding: 12px; background: transparent; color: #7f8c8d; border: none; font-size: 14px; font-weight: 700; cursor: pointer;">تخطي الآن</button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(installModal);
-        
-        document.getElementById('btnPwaInstall').onclick = async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    deferredPrompt = null;
-                }
-            } else {
-                alert('الرجاء الإضافة إلى الشاشة الرئيسية (Add to Home Screen) من خلال إعدادات المتصفح.');
-            }
-            document.body.removeChild(installModal);
-            localStorage.setItem('pwa_prompt_shown_v1', 'true');
-        };
-        
-        document.getElementById('btnPwaClose').onclick = () => {
-            document.body.removeChild(installModal);
-            localStorage.setItem('pwa_prompt_shown_v1', 'true');
-        };
-    }
-}
-
 
 function getEmbedUrl(url) {
     let videoId = "";
@@ -158,16 +154,13 @@ function getEmbedUrl(url) {
     return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1` : url;
 }
 
-// Student form
 document.getElementById('addStudentForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const fullName = document.getElementById('studentName').value.trim();
     const username = document.getElementById('studentUsername').value.trim();
     const days = parseInt(document.getElementById('studentDays').value);
-
     const now = Date.now();
     const addedTime = days * 24 * 60 * 60 * 1000;
-
     const existingIndex = students.findIndex(s => s.username === username);
     if (existingIndex >= 0) {
         let currentEnd = students[existingIndex].endDate;
@@ -178,13 +171,11 @@ document.getElementById('addStudentForm').addEventListener('submit', function(e)
         students.push({ fullName, username, endDate: now + addedTime });
         showPopup('نجاح الإضافة', 'تمت إضافة الطالب وتفعيل اشتراكه بنجاح! 🎉');
     }
-
     localStorage.setItem(DB_STUDENTS, JSON.stringify(students));
     this.reset();
     renderStudents();
 });
 
-// Section form
 document.getElementById('addSectionForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const sectionName = document.getElementById('sectionName').value.trim();
@@ -196,18 +187,12 @@ document.getElementById('addSectionForm').addEventListener('submit', function(e)
     populateSectionSelects();
 });
 
-// Lesson form
 document.getElementById('addLessonForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const sectionId = document.getElementById('lessonSection').value;
     const title = document.getElementById('lessonTitle').value.trim();
     const url = document.getElementById('lessonUrl').value.trim();
-
-    if(!sectionId) {
-        showPopup('خطأ', 'الرجاء اختيار القسم أولاً');
-        return;
-    }
-
+    if(!sectionId) { showPopup('خطأ', 'الرجاء اختيار القسم أولاً'); return; }
     lessons.push({ id: Date.now(), sectionId: sectionId, title, videoUrl: getEmbedUrl(url) });
     localStorage.setItem(DB_LESSONS, JSON.stringify(lessons));
     showPopup('نجاح النشر', 'تم نشر الدرس بنجاح! 📚');
@@ -215,13 +200,11 @@ document.getElementById('addLessonForm').addEventListener('submit', function(e) 
     renderLessons();
 });
 
-// Ad form
 document.getElementById('addAdForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const title = document.getElementById('adTitle').value.trim();
     const content = document.getElementById('adContent').value.trim();
     const date = new Date().toLocaleDateString('ar-EG');
-
     ads.unshift({ id: Date.now(), title, text: content, date });
     localStorage.setItem(DB_ADS, JSON.stringify(ads));
     showPopup('نجاح النشر', 'تم نشر الإعلان للطلاب! 📢');
@@ -229,33 +212,26 @@ document.getElementById('addAdForm').addEventListener('submit', function(e) {
     renderAds();
 });
 
-// Render Functions
 function renderStudents() {
     const list = document.getElementById('studentsList');
     const searchInput = document.getElementById('searchStudentInput');
     const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
-    
     let filteredStudents = students;
-    if (query) {
-        filteredStudents = students.filter(s => s.fullName.toLowerCase().includes(query) || s.username.toLowerCase().includes(query));
-    }
-
-    list.innerHTML = filteredStudents.length ? '' : '<p style="text-align:center; color:#7f8c8d; font-weight:700;">لا يوجد طلاب مسجلين أو مطابقين للبحث.</p>';
-    
+    if (query) { filteredStudents = students.filter(s => s.fullName.toLowerCase().includes(query) || s.username.toLowerCase().includes(query)); }
+    list.innerHTML = filteredStudents.length ? '' : '<p style="text-align:center; color:#7f8c8d; font-weight:700;">لا يوجد طلاب مسجلين.</p>';
     const now = Date.now();
     filteredStudents.forEach((s) => {
         let index = students.indexOf(s);
         let daysLeft = Math.ceil((s.endDate - now) / (1000 * 60 * 60 * 24));
         let isExpired = daysLeft <= 0;
         let isExpiringSoon = daysLeft > 0 && daysLeft <= 3;
-        
         list.innerHTML += `
         <div class="data-item ${isExpired ? 'expired' : ''} ${isExpiringSoon ? 'expiring-soon' : ''}">
             <div class="data-info">
                 <strong>👤 ${s.fullName}</strong>
                 <span>اليوزر: @${s.username}</span><br>
                 <div class="badge ${isExpired ? 'expired' : isExpiringSoon ? 'warning' : 'active'}">
-                    ${isExpired ? '❌ منتهي الصلاحية' : isExpiringSoon ? `⚠️ ينتهي قريباً (${daysLeft} يوم)` : `✅ متبقي ${daysLeft} يوم`}
+                    ${isExpired ? '❌ منتهي' : isExpiringSoon ? `⚠️ ينتهي قريباً (${daysLeft} يوم)` : `✅ متبقي ${daysLeft} يوم`}
                 </div>
             </div>
             <div class="action-btns" style="flex-direction:row;">
@@ -277,13 +253,10 @@ function populateSectionSelects() {
 
 function renderSections() {
     const list = document.getElementById('sectionsList');
-    list.innerHTML = sections.length ? '' : '<p style="text-align:center; color:#7f8c8d; font-weight:700;">لا يوجد أقسام مضافة.</p>';
+    list.innerHTML = sections.length ? '' : '<p style="text-align:center; color:#7f8c8d; font-weight:700;">لا يوجد أقسام.</p>';
     sections.forEach((s, index) => {
-        list.innerHTML += `
-        <div class="data-item">
-            <div class="data-info">
-                <strong>🗂️ ${s.name}</strong>
-            </div>
+        list.innerHTML += `<div class="data-item">
+            <div class="data-info"><strong>🗂️ ${s.name}</strong></div>
             <div class="action-btns" style="flex-direction:row;">
                 <button onclick="openEditSection(${index})" class="btn-edit">تعديل</button>
                 <button onclick="deleteData('sections', ${index})" class="btn-delete">حذف</button>
@@ -294,16 +267,12 @@ function renderSections() {
 
 function renderLessons() {
     const list = document.getElementById('lessonsList');
-    list.innerHTML = lessons.length ? '' : '<p style="text-align:center; color:#7f8c8d; font-weight:700;">لا يوجد دروس منشورة.</p>';
+    list.innerHTML = lessons.length ? '' : '<p style="text-align:center; color:#7f8c8d; font-weight:700;">لا يوجد دروس.</p>';
     lessons.forEach((l, index) => {
-        const sec = sections.find(s => s.id == l.sectionId) || sections.find(s => s.name === l.section);
-        const sectionName = sec ? sec.name : (l.section || 'قسم غير محدد');
-        list.innerHTML += `
-        <div class="data-item">
-            <div class="data-info">
-                <span style="color:#6a11cb;">🗂️ ${sectionName}</span>
-                <strong>▶ ${l.title}</strong>
-            </div>
+        const sec = sections.find(s => s.id == l.sectionId);
+        const sectionName = sec ? sec.name : 'قسم غير محدد';
+        list.innerHTML += `<div class="data-item">
+            <div class="data-info"><span style="color:#6a11cb;">🗂️ ${sectionName}</span><strong>▶ ${l.title}</strong></div>
             <div class="action-btns" style="flex-direction:row;">
                 <button onclick="openEditLesson(${index})" class="btn-edit">تعديل</button>
                 <button onclick="deleteData('lessons', ${index})" class="btn-delete">حذف</button>
@@ -314,18 +283,12 @@ function renderLessons() {
 
 function renderAds() {
     const list = document.getElementById('adsList');
-    list.innerHTML = ads.length ? '' : '<p style="text-align:center; color:#7f8c8d; font-weight:700;">لا توجد إعلانات منشورة.</p>';
+    list.innerHTML = ads.length ? '' : '<p style="text-align:center; color:#7f8c8d; font-weight:700;">لا توجد إعلانات.</p>';
     ads.forEach((a, index) => {
-        list.innerHTML += `
-        <div class="data-item">
-            <div class="data-info">
-                <span>📅 ${a.date}</span>
-                <strong style="color:#f39c12;">📢 ${a.title}</strong>
-                <p style="font-size:14px; font-weight:600; white-space:pre-wrap; color:#34495e; margin-top:5px;">${a.text || a.content}</p>
-            </div>
-            <div class="action-btns">
-                <button onclick="deleteData('ads', ${index})" class="btn-delete">حذف</button>
-            </div>
+        list.innerHTML += `<div class="data-item">
+            <div class="data-info"><span>📅 ${a.date}</span><strong style="color:#f39c12;">📢 ${a.title}</strong>
+            <p style="font-size:14px; white-space:pre-wrap; margin-top:5px;">${a.text || a.content}</p></div>
+            <div class="action-btns"><button onclick="deleteData('ads', ${index})" class="btn-delete">حذف</button></div>
         </div>`;
     });
 }
@@ -344,66 +307,46 @@ window.deleteData = function(type, index) {
     if(type === 'ads') { ads.splice(index, 1); localStorage.setItem(DB_ADS, JSON.stringify(ads)); renderAds(); }
 }
 
-// Edit Student
 window.openEditStudent = function(index) {
     const s = students[index];
     document.getElementById('editStudentIndex').value = index;
     document.getElementById('editStudentName').value = s.fullName || '';
     document.getElementById('editStudentUsername').value = s.username || '';
-    
     let daysLeft = Math.ceil((s.endDate - Date.now()) / (1000 * 60 * 60 * 24));
     document.getElementById('editStudentDays').value = daysLeft > 0 ? daysLeft : 0;
-    
     document.getElementById('editStudentModal').classList.add('active');
 }
-window.closeEditStudent = function() {
-    document.getElementById('editStudentModal').classList.remove('active');
-}
+window.closeEditStudent = function() { document.getElementById('editStudentModal').classList.remove('active'); }
 window.saveEditStudent = function() {
     const index = document.getElementById('editStudentIndex').value;
     const name = document.getElementById('editStudentName').value.trim();
     const username = document.getElementById('editStudentUsername').value.trim();
     const days = parseInt(document.getElementById('editStudentDays').value);
-    
     if(name && username) {
         students[index].fullName = name;
         students[index].username = username;
-        if (!isNaN(days)) {
-            students[index].endDate = Date.now() + (days * 24 * 60 * 60 * 1000);
-        }
+        students[index].endDate = Date.now() + (days * 24 * 60 * 60 * 1000);
         localStorage.setItem(DB_STUDENTS, JSON.stringify(students));
-        renderStudents();
-        closeEditStudent();
-        showPopup('نجاح', 'تم تعديل بيانات الطالب بنجاح!');
-    } else {
-        showPopup('خطأ', 'يرجى تعبئة الاسم واليوزر');
+        renderStudents(); closeEditStudent(); showPopup('نجاح', 'تم التعديل!');
     }
 }
 
-// Edit Section 
 window.openEditSection = function(index) {
     document.getElementById('editSectionIndex').value = index;
     document.getElementById('editSectionNameInput').value = sections[index].name;
     document.getElementById('editSectionModal').classList.add('active');
 }
-window.closeEditSection = function() {
-    document.getElementById('editSectionModal').classList.remove('active');
-}
+window.closeEditSection = function() { document.getElementById('editSectionModal').classList.remove('active'); }
 window.saveEditSection = function() {
     const index = document.getElementById('editSectionIndex').value;
     const name = document.getElementById('editSectionNameInput').value.trim();
     if(name) {
         sections[index].name = name;
         localStorage.setItem(DB_SECTIONS, JSON.stringify(sections));
-        renderSections();
-        populateSectionSelects();
-        renderLessons();
-        closeEditSection();
-        showPopup('تم التعديل', 'تم حفظ تعديلات القسم بنجاح!');
+        renderSections(); populateSectionSelects(); renderLessons(); closeEditSection();
     }
 }
 
-// Edit Lesson
 window.openEditLesson = function(index) {
     const lesson = lessons[index];
     document.getElementById('editLessonIndex').value = index;
@@ -412,24 +355,17 @@ window.openEditLesson = function(index) {
     document.getElementById('editLessonUrl').value = lesson.videoUrl;
     document.getElementById('editLessonModal').classList.add('active');
 }
-window.closeEditLesson = function() {
-    document.getElementById('editLessonModal').classList.remove('active');
-}
+window.closeEditLesson = function() { document.getElementById('editLessonModal').classList.remove('active'); }
 window.saveEditLesson = function() {
     const index = document.getElementById('editLessonIndex').value;
     const sectionId = document.getElementById('editLessonSection').value;
     const title = document.getElementById('editLessonTitle').value.trim();
     const url = document.getElementById('editLessonUrl').value.trim();
-    
     if(title && url && sectionId) {
         lessons[index].sectionId = sectionId;
         lessons[index].title = title;
         lessons[index].videoUrl = getEmbedUrl(url);
         localStorage.setItem(DB_LESSONS, JSON.stringify(lessons));
-        renderLessons();
-        closeEditLesson();
-        showPopup('تم التعديل', 'تم حفظ تعديلات الدرس بنجاح!');
+        renderLessons(); closeEditLesson();
     }
 }
-
-
