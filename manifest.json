@@ -1,7 +1,7 @@
 {
     "name": "Admin Panel",
     "short_name": "Admin",
-    "start_url": "index.html",
+    "start_url": "./",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#6a11cb",
