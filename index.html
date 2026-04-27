@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لوحة الإدارة | 3D</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- شاشة تسجيل الدخول للمشرف -->
+    <div id="loginScreen" class="screen active">
+        <div class="login-card 3d-card">
+            <div class="avatar">👨‍🏫</div>
+            <h2>دخول الإدارة</h2>
+            <p>الرجاء إدخال كلمة المرور</p>
+            <form id="adminLoginForm">
+                <div class="input-group">
+                    <input type="password" id="adminPassword" required autocomplete="off">
+                    <label>الرمز السري</label>
+                </div>
+                <button type="submit" class="btn-3d">دخول لوحة الإدارة</button>
+            </form>
+            <div id="loginError" class="error-msg"></div>
+        </div>
+    </div>
+
+    <!-- لوحة الإدارة الرئيسية -->
+    <div id="appScreen" class="screen">
+        <header class="app-header">
+        <h2>👨‍🏫 لوحة الإدارة</h2>
+        <p>إدارة المنصة باحترافية</p>
+    </header>
+
+    <div class="main-content">
+        <!-- Tab 1: Students -->
+        <div id="studentsTab" class="tab-content active">
+            <h2 class="page-title">إدارة الطلاب 👤</h2>
+            <div class="card form-card 3d-card">
+                <h3>إضافة طالب أو تجديد اشتراك</h3>
+                <form id="addStudentForm">
+                    <div class="input-group">
+                        <input type="text" id="studentName" required>
+                        <label>الاسم الحقيقي للطالب (سيظهر له)</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="studentUsername" required>
+                        <label>يوزر الدخول (بدون مسافات)</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="number" id="studentDays" required min="1">
+                        <label>عدد أيام الاشتراك (مثال: 30)</label>
+                    </div>
+                    <button type="submit" class="btn-3d">حفظ وتفعيل الطالب</button>
+                </form>
+            </div>
+            <div class="card list-card 3d-card">
+                <h3>الطلاب المسجلين</h3>
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <input type="text" id="searchStudentInput" placeholder="بحث باسم الطالب أو اليوزر..." oninput="renderStudents()" style="padding: 12px; font-size: 14px;">
+                </div>
+                <div id="studentsList" class="data-list"></div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Sections (New) -->
+        <div id="sectionsTab" class="tab-content">
+            <h2 class="page-title">إدارة الأقسام 🗂️</h2>
+            <div class="card form-card 3d-card">
+                <h3>إضافة قسم جديد</h3>
+                <form id="addSectionForm">
+                    <div class="input-group">
+                        <input type="text" id="sectionName" required>
+                        <label>اسم القسم (مثال: الثالث المتوسط)</label>
+                    </div>
+                    <button type="submit" class="btn-3d btn-primary">حفظ القسم</button>
+                </form>
+            </div>
+            <div class="card list-card 3d-card">
+                <h3>الأقسام المضافة</h3>
+                <div id="sectionsList" class="data-list"></div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Lessons -->
+        <div id="lessonsTab" class="tab-content">
+            <h2 class="page-title">إدارة الدروس 📚</h2>
+            <div class="card form-card 3d-card">
+                <h3>نشر درس جديد</h3>
+                <form id="addLessonForm">
+                    <div class="input-group">
+                        <select id="lessonSection" class="custom-select" required>
+                            <!-- options populated by JS -->
+                        </select>
+                        <label class="select-label">اختر القسم</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="lessonTitle" required>
+                        <label>اسم الدرس</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="url" id="lessonUrl" required>
+                        <label>رابط الفيديو</label>
+                    </div>
+                    <button type="submit" class="btn-3d btn-primary">حفظ الدرس</button>
+                </form>
+            </div>
+            <div class="card list-card 3d-card">
+                <h3>الدروس المنشورة</h3>
+                <div id="lessonsList" class="data-list"></div>
+            </div>
+        </div>
+
+        <!-- Tab 4: Ads -->
+        <div id="adsTab" class="tab-content">
+            <h2 class="page-title">الإعلانات 📢</h2>
+            <div class="card form-card 3d-card">
+                <h3>نشر إعلان جديد</h3>
+                <form id="addAdForm">
+                    <div class="input-group">
+                        <input type="text" id="adTitle" required>
+                        <label>عنوان الإعلان (مثال: تنبيه هام)</label>
+                    </div>
+                    <div class="input-group">
+                        <textarea id="adContent" rows="4" required></textarea>
+                        <label>اكتب تفاصيل الإعلان هنا...</label>
+                    </div>
+                    <button type="submit" class="btn-3d btn-primary">نشر الإعلان</button>
+                </form>
+            </div>
+            <div class="card list-card 3d-card">
+                <h3>الإعلانات السابقة</h3>
+                <div id="adsList" class="data-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3D Modals / Popups -->
+    <div id="customPopup" class="popup-overlay">
+        <div class="popup-box 3d-card">
+            <div class="popup-icon">✅</div>
+            <h3 id="popupTitle">تم الحفظ</h3>
+            <p id="popupMessage">تمت العملية بنجاح!</p>
+            <button onclick="closePopup()" class="btn-3d">حسناً</button>
+        </div>
+    </div>
+
+    <!-- Edit Section Modal -->
+    <div id="editSectionModal" class="popup-overlay">
+        <div class="popup-box 3d-card">
+            <h3>تعديل القسم</h3>
+            <div class="input-group">
+                <input type="text" id="editSectionNameInput" required>
+                <label>اسم القسم</label>
+            </div>
+            <input type="hidden" id="editSectionIndex">
+            <div class="flex-btns">
+                <button onclick="saveEditSection()" class="btn-3d btn-primary">حفظ</button>
+                <button onclick="closeEditSection()" class="btn-3d btn-dim">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Lesson Modal -->
+    <div id="editLessonModal" class="popup-overlay">
+        <div class="popup-box 3d-card" style="width: 90%; max-width: 400px;">
+            <h3>تعديل الدرس</h3>
+            <div class="input-group">
+                <select id="editLessonSection" class="custom-select" required></select>
+                <label class="select-label">اختر القسم</label>
+            </div>
+            <div class="input-group">
+                <input type="text" id="editLessonTitle" required>
+                <label>اسم الدرس</label>
+            </div>
+            <div class="input-group">
+                <input type="url" id="editLessonUrl" required>
+                <label>رابط الفيديو</label>
+            </div>
+            <input type="hidden" id="editLessonIndex">
+            <div class="flex-btns">
+                <button onclick="saveEditLesson()" class="btn-3d btn-primary">حفظ</button>
+                <button onclick="closeEditLesson()" class="btn-3d btn-dim">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav 3d-nav">
+        <div class="nav-item active" onclick="switchTab('studentsTab')" id="nav-studentsTab">
+            <span class="nav-icon">👤</span>
+            <span class="nav-text">الطلاب</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('sectionsTab')" id="nav-sectionsTab">
+            <span class="nav-icon">🗂️</span>
+            <span class="nav-text">الأقسام</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('lessonsTab')" id="nav-lessonsTab">
+            <span class="nav-icon">📚</span>
+            <span class="nav-text">الدروس</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('adsTab')" id="nav-adsTab">
+            <span class="nav-icon">📢</span>
+            <span class="nav-text">إعلانات</span>
+        </div>
+    </nav>
+    </div> <!-- closure for appScreen -->
+
+    <!-- Edit Student Modal -->
+    <div id="editStudentModal" class="popup-overlay">
+        <div class="popup-box 3d-card" style="width: 90%; max-width: 400px; position: relative;">
+            <span class="close-modal" onclick="closeEditStudent()" style="position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #7f8c8d;">×</span>
+            <h3 style="margin-bottom: 20px;">تعديل بيانات الطالب</h3>
+            <div class="input-group">
+                <input type="text" id="editStudentName" autocomplete="off" required>
+                <label>اسم الطالب الثلاثي</label>
+            </div>
+            <div class="input-group">
+                <input type="text" id="editStudentUsername" autocomplete="off" required>
+                <label>يوزر الدخول</label>
+            </div>
+            <div class="input-group">
+                <input type="number" id="editStudentDays" min="0" required>
+                <label>الأيام المتبقية</label>
+            </div>
+            <input type="hidden" id="editStudentIndex">
+            <button onclick="saveEditStudent()" class="btn-3d">حفظ التعديلات</button>
+        </div>
+    </div>
+
+    <link rel="manifest" href="manifest.json">
+    <script src="script.js" type="module"></script>
+</body>
+</html>
